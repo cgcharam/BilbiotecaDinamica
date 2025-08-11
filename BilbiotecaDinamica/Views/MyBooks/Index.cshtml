@@ -1,0 +1,44 @@
+@model IEnumerable<BilbiotecaDinamica.Models.FavoriteBook>
+
+@{
+    ViewData["Title"] = "Mis Libros";
+}
+
+<h1>Mis Libros</h1>
+
+<table class="table">
+    <thead>
+        <tr>
+            <th>Portada</th>
+            <th>Título</th>
+            <th>Autor</th>
+            <th>Año de Publicación</th>
+            <th>Acciones</th>
+        </tr>
+    </thead>
+    <tbody>
+        @foreach (var item in Model)
+        {
+            <tr>
+                <td>
+                    @if (item.CoverId.HasValue)
+                    {
+                        <img src="https://covers.openlibrary.org/b/id/@(item.CoverId.Value)-M.jpg" alt="Portada para @item.Title" style="max-width: 100px;" />
+                    }
+                </td>
+                <td>
+                    @Html.DisplayFor(modelItem => item.Title)
+                </td>
+                <td>
+                    @Html.DisplayFor(modelItem => item.Author)
+                </td>
+                <td>
+                    @Html.DisplayFor(modelItem => item.FirstPublishYear)
+                </td>
+                <td>
+                    <a asp-action="Delete" asp-route-id="@item.Id">Eliminar</a>
+                </td>
+            </tr>
+        }
+    </tbody>
+</table>

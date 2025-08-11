@@ -1,0 +1,4 @@
+{
+    "dbMcp.provider": "sqlserver",
+    "dbMcp.connectionString": "mssql://cgchaconr:chrominae88@localhost:1433/Certificaciones"
+}
