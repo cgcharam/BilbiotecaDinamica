@@ -14,7 +14,7 @@ using System.Reflection;
 [assembly: System.Reflection.AssemblyCompanyAttribute("BilbiotecaDinamica")]
 [assembly: System.Reflection.AssemblyConfigurationAttribute("Debug")]
 [assembly: System.Reflection.AssemblyFileVersionAttribute("1.0.0.0")]
-[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0")]
+[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+e61262a44240c76d5256d2b81d9beb8c8775fac6")]
 [assembly: System.Reflection.AssemblyProductAttribute("BilbiotecaDinamica")]
 [assembly: System.Reflection.AssemblyTitleAttribute("BilbiotecaDinamica")]
 [assembly: System.Reflection.AssemblyVersionAttribute("1.0.0.0")]

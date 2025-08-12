@@ -16,5 +16,6 @@ namespace BilbiotecaDinamica.Models
         public required string Author { get; set; }
         public int? CoverId { get; set; }
         public int? FirstPublishYear { get; set; }
+        public string? CoverImageUrl { get; set; }
     }
 }

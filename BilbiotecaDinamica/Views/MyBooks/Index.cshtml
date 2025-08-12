@@ -21,9 +21,9 @@
         {
             <tr>
                 <td>
-                    @if (item.CoverId.HasValue)
+                    @if (!string.IsNullOrEmpty(item.CoverImageUrl))
                     {
-                        <img src="https://covers.openlibrary.org/b/id/@(item.CoverId.Value)-M.jpg" alt="Portada para @item.Title" style="max-width: 100px;" />
+                        <img src="@item.CoverImageUrl" alt="Portada para @item.Title" style="max-width: 100px;" />
                     }
                 </td>
                 <td>

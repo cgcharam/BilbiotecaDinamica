@@ -34,7 +34,7 @@ namespace BilbiotecaDinamica.Controllers
         // POST: MyBooks/Add
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> Add(string openLibraryId, string title, string author, int? coverId, int? firstPublishYear)
+        public async Task<IActionResult> Add(string openLibraryId, string title, string author, int? coverId, int? firstPublishYear, string? coverImageUrl)
         {
             if (openLibraryId == null || title == null || author == null)
             {
@@ -56,7 +56,8 @@ namespace BilbiotecaDinamica.Controllers
                     Title = title,
                     Author = author,
                     CoverId = coverId,
-                    FirstPublishYear = (int?)firstPublishYear
+                    FirstPublishYear = (int?)firstPublishYear,
+                    CoverImageUrl = coverImageUrl
                 };
 
                 _context.Add(book);

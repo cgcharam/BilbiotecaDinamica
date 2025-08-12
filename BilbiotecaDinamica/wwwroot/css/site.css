@@ -29,3 +29,59 @@ body {
 .form-floating > .form-control-plaintext:focus::placeholder, .form-floating > .form-control:focus::placeholder {
   text-align: start;
 }
+body {
+  margin-bottom: 60px;
+  background-image: url('/images/background.webp'); /* Asegúrate de que el nombre y la extensión sean correctos */
+  background-size: cover;
+  background-repeat: no-repeat;
+  background-attachment: fixed;
+  background-color: #f8f4e3; /* Un color de fondo cálido si la imagen no carga o para un efecto sutil */
+}
+
+/* Estilos para la barra de navegación */
+.navbar {
+  background-color: #f0e6d2 !important; /* Un beige cálido */
+  border-bottom: 1px solid #e0d8c7 !important;
+}
+
+.navbar .nav-link.text-dark {
+  color: #8b4513 !important; /* Un marrón cálido para los enlaces */
+}
+
+.navbar .navbar-brand {
+  color: #a0522d !important; /* Un tono más oscuro para la marca */
+}
+
+/* Estilos para el pie de página */
+.footer {
+  background-color: #f0e6d2; /* Mismo beige cálido que la navbar */
+  color: #8b4513 !important; /* Mismo marrón cálido para el texto */
+  border-top: 1px solid #e0d8c7;
+}
+
+.footer a {
+  color: #a0522d !important; /* Tono más oscuro para los enlaces del footer */
+}
+
+/* Estilos para el contenido principal */
+.container main {
+  background-color: rgba(255, 255, 255, 0.8); /* Un blanco semitransparente para el contenido */
+  padding: 20px;
+  border-radius: 8px;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1); /* Sombra suave */
+}
+
+/* Ajuste para los botones y focos */
+.btn:focus, .btn:active:focus, .btn-link.nav-link:focus, .form-control:focus, .form-check-input:focus {
+  box-shadow: 0 0 0 0.1rem #f0e6d2, 0 0 0 0.25rem #a0522d; /* Colores cálidos para el foco */
+}
+
+/* Ajuste para el texto de los formularios */
+.form-floating > .form-control-plaintext::placeholder, .form-floating > .form-control::placeholder {
+  color: #a0522d; /* Color cálido para el placeholder */
+  text-align: end;
+}
+
+.form-floating > .form-control-plaintext:focus::placeholder, .form-floating > .form-control:focus::placeholder {
+  text-align: start;
+}

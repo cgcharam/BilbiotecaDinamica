@@ -143,7 +143,6 @@ c:\Users\cgchaconr\source\repos\BilbiotecaDinamica\BilbiotecaDinamica\obj\Debug\
 c:\Users\cgchaconr\source\repos\BilbiotecaDinamica\BilbiotecaDinamica\obj\Debug\net9.0\scopedcss\Views\Shared\_Layout.cshtml.rz.scp.css
 c:\Users\cgchaconr\source\repos\BilbiotecaDinamica\BilbiotecaDinamica\obj\Debug\net9.0\scopedcss\bundle\BilbiotecaDinamica.styles.css
 c:\Users\cgchaconr\source\repos\BilbiotecaDinamica\BilbiotecaDinamica\obj\Debug\net9.0\scopedcss\projectbundle\BilbiotecaDinamica.bundle.scp.css
-c:\Users\cgchaconr\source\repos\BilbiotecaDinamica\BilbiotecaDinamica\obj\Debug\net9.0\compressed\6ogtt4gwrx-b9sayid5wm.gz
 c:\Users\cgchaconr\source\repos\BilbiotecaDinamica\BilbiotecaDinamica\obj\Debug\net9.0\compressed\8jvv3j63rg-61n19gt1b8.gz
 c:\Users\cgchaconr\source\repos\BilbiotecaDinamica\BilbiotecaDinamica\obj\Debug\net9.0\compressed\17avdyu4zm-xtxxf3hu2r.gz
 c:\Users\cgchaconr\source\repos\BilbiotecaDinamica\BilbiotecaDinamica\obj\Debug\net9.0\compressed\15l1y6bg2e-bqjiyaj88i.gz
@@ -405,3 +404,5 @@ c:\Users\cgchaconr\source\repos\BilbiotecaDinamica\BilbiotecaDinamica\obj\Debug\
 c:\Users\cgchaconr\source\repos\BilbiotecaDinamica\BilbiotecaDinamica\obj\Debug\net9.0\compressed\nezrqnk58p-muycvpuwrr.gz
 c:\Users\cgchaconr\source\repos\BilbiotecaDinamica\BilbiotecaDinamica\obj\Debug\net9.0\compressed\v0zgfp0y55-87fc7y1x7t.gz
 c:\Users\cgchaconr\source\repos\BilbiotecaDinamica\BilbiotecaDinamica\obj\Debug\net9.0\compressed\yfc7ypekbg-mlv21k5csn.gz
+C:\Users\cgchaconr\source\repos\BilbiotecaDinamica\BilbiotecaDinamica\obj\Debug\net9.0\BilbiotecaDinamica.sourcelink.json
+C:\Users\cgchaconr\source\repos\BilbiotecaDinamica\BilbiotecaDinamica\obj\Debug\net9.0\compressed\6ogtt4gwrx-debzv2gwsq.gz

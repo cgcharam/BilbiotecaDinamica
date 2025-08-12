@@ -12,7 +12,8 @@ public class ApplicationDbContext : IdentityDbContext<IdentityUser>
     {
     }
 
-    public DbSet<FavoriteBook> FavoriteBooks { get; set; } // Added this line
+    public DbSet<FavoriteBook> FavoriteBooks { get; set; }
+    public DbSet<SearchCacheEntry> SearchCacheEntries { get; set; }
 
     protected override void OnModelCreating(ModelBuilder builder)
     {

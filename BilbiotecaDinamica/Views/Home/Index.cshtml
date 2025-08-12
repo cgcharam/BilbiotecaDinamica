@@ -5,7 +5,7 @@
 
 @{
     ViewData["Title"] = "Página Principal";
-    var searchType = ViewData["SearchType"] as string ?? "author";
+    var searchType = ViewData["SearchType"] as string ?? "title";
 }
 
 <div class="text-center">
@@ -73,9 +73,9 @@
             {
                 <tr>
                     <td>
-                        @if (doc.AdditionalFields != null && doc.AdditionalFields.TryGetValue("cover_i", out var coverId))
+                        @if (!string.IsNullOrEmpty(doc.CoverImageUrl))
                         {
-                            <img src="https://covers.openlibrary.org/b/id/@(coverId)-L.jpg" alt="Portada para @doc.Title" style="max-width: 150px;" />
+                            <img src="@doc.CoverImageUrl" alt="Portada para @doc.Title" style="max-width: 150px;" />
                         }
                     </td>
                     <td>@doc.Title</td>
@@ -90,6 +90,7 @@
                                 <input type="hidden" name="author" value="@(doc.AuthorName != null ? string.Join(", ", doc.AuthorName) : "")" />
                                 <input type="hidden" name="coverId" value="@(doc.AdditionalFields != null && doc.AdditionalFields.TryGetValue("cover_i", out var cId) ? cId.ToString() : "")" />
                                 <input type="hidden" name="firstPublishYear" value="@doc.FirstPublishYear" />
+                                <input type="hidden" name="coverImageUrl" value="@doc.CoverImageUrl" />
                                 <button type="submit" class="btn btn-sm btn-primary">Añadir a Mis Libros</button>
                             </form>
                         </td>

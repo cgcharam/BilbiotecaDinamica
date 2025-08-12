@@ -21,6 +21,17 @@ namespace BilbiotecaDinamica.Models
         [JsonPropertyName("first_publish_year")]
         public int FirstPublishYear { get; set; }
 
+        [JsonPropertyName("cover_i")] // This is the property for cover ID from Open Library
+        public int? CoverId { get; set; }
+
+        public string? CoverImageUrl
+        {
+            get
+            {
+                return CoverId.HasValue ? $"https://covers.openlibrary.org/b/id/{CoverId}-M.jpg" : null;
+            }
+        }
+
         [JsonExtensionData]
         public Dictionary<string, object>? AdditionalFields { get; set; }
     }

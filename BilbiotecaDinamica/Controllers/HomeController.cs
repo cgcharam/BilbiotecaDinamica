@@ -9,6 +9,8 @@ using System.Linq;
 using Microsoft.AspNetCore.Http; // Added this line
 using Microsoft.AspNetCore.Localization; // Added this line
 using System; // Added this line
+using BilbiotecaDinamica.Data; // Added for DbContext
+using Microsoft.EntityFrameworkCore; // Added for Entity Framework Core
 
 namespace BilbiotecaDinamica.Controllers
 {
@@ -16,11 +18,13 @@ namespace BilbiotecaDinamica.Controllers
     {
         private readonly ILogger<HomeController> _logger;
         private readonly IHttpClientFactory _httpClientFactory;
+        private readonly ApplicationDbContext _context;
 
-        public HomeController(ILogger<HomeController> logger, IHttpClientFactory httpClientFactory)
+        public HomeController(ILogger<HomeController> logger, IHttpClientFactory httpClientFactory, ApplicationDbContext context)
         {
             _logger = logger;
             _httpClientFactory = httpClientFactory;
+            _context = context;
         }
 
         public async Task<IActionResult> Index(string query, string searchType)
@@ -33,23 +37,55 @@ namespace BilbiotecaDinamica.Controllers
             var model = new List<Doc>();
             if (!string.IsNullOrEmpty(query))
             {
-                var client = _httpClientFactory.CreateClient();
-                var searchField = searchType switch
-                {
-                    "all" => "q",
-                    "text" => "q",
-                    "lists" => "", // Not supported
-                    _ => searchType ?? "author",
-                };
+                // Check cache first
+                var cachedEntry = await _context.SearchCacheEntries
+                    .FirstOrDefaultAsync(e => e.SearchQuery == query);
 
-                if (!string.IsNullOrEmpty(searchField))
+                if (cachedEntry != null && (DateTime.Now - cachedEntry.Timestamp).TotalMinutes < 15) 
                 {
-                    var response = await client.GetAsync($"https://openlibrary.org/search.json?{searchField}={query}");
-                    if (response.IsSuccessStatusCode)
+                    model = JsonSerializer.Deserialize<List<Doc>>(cachedEntry.SearchResultsJson) ?? new List<Doc>();
+                }
+                else
+                {
+                    var client = _httpClientFactory.CreateClient();
+                    var searchField = searchType switch
                     {
-                        var json = await response.Content.ReadAsStringAsync();
-                        var result = JsonSerializer.Deserialize<OpenLibrarySearchResult>(json);
-                        model = result?.Docs ?? new List<Doc>();
+                        "all" => "q",
+                        "text" => "q",
+                        "lists" => "", // Not supported
+                        _ => searchType ?? "author",
+                    };
+
+                    if (!string.IsNullOrEmpty(searchField))
+                    {
+                        var response = await client.GetAsync($"https://openlibrary.org/search.json?{searchField}={query}");
+                        if (response.IsSuccessStatusCode)
+                        {
+                            var json = await response.Content.ReadAsStringAsync();
+                            var result = JsonSerializer.Deserialize<OpenLibrarySearchResult>(json);
+                            
+                            // Limit to first 15 results and ensure CoverImageUrl is populated
+                            model = result?.Docs?.Take(15).ToList() ?? new List<Doc>();
+
+                            // Save to cache
+                            var searchResultsJson = JsonSerializer.Serialize(model);
+                            if (cachedEntry == null)
+                            {
+                                _context.SearchCacheEntries.Add(new SearchCacheEntry
+                                {
+                                    SearchQuery = query,
+                                    Timestamp = DateTime.Now,
+                                    SearchResultsJson = searchResultsJson
+                                });
+                            }
+                            else
+                            {
+                                cachedEntry.Timestamp = DateTime.Now;
+                                cachedEntry.SearchResultsJson = searchResultsJson;
+                                _context.SearchCacheEntries.Update(cachedEntry);
+                            }
+                            await _context.SaveChangesAsync();
+                        }
                     }
                 }
             }
@@ -70,17 +106,51 @@ namespace BilbiotecaDinamica.Controllers
             if (!string.IsNullOrEmpty(searchModel.Subject)) queryParts.Add($"subject={searchModel.Subject}");
             if (!string.IsNullOrEmpty(searchModel.Query)) queryParts.Add($"q={searchModel.Query}");
 
+            var fullQuery = string.Join("&", queryParts);
+
             var model = new List<Doc>();
             if (queryParts.Any())
             {
-                var client = _httpClientFactory.CreateClient();
-                var queryString = string.Join("&", queryParts);
-                var response = await client.GetAsync($"https://openlibrary.org/search.json?{queryString}");
-                if (response.IsSuccessStatusCode)
+                // Check cache first
+                var cachedEntry = await _context.SearchCacheEntries
+                    .FirstOrDefaultAsync(e => e.SearchQuery == fullQuery);
+
+                if (cachedEntry != null && (DateTime.Now - cachedEntry.Timestamp).TotalMinutes < 15) // Cache valid for 15 minutes
                 {
-                    var json = await response.Content.ReadAsStringAsync();
-                    var result = JsonSerializer.Deserialize<OpenLibrarySearchResult>(json);
-                    model = result?.Docs ?? new List<Doc>();
+                    model = JsonSerializer.Deserialize<List<Doc>>(cachedEntry.SearchResultsJson) ?? new List<Doc>();
+                }
+                else
+                {
+                    var client = _httpClientFactory.CreateClient();
+                    var queryString = string.Join("&", queryParts);
+                    var response = await client.GetAsync($"https://openlibrary.org/search.json?{queryString}");
+                    if (response.IsSuccessStatusCode)
+                    {
+                        var json = await response.Content.ReadAsStringAsync();
+                        var result = JsonSerializer.Deserialize<OpenLibrarySearchResult>(json);
+                        
+                        // Limit to first 15 results and ensure CoverImageUrl is populated
+                        model = result?.Docs?.Take(15).ToList() ?? new List<Doc>();
+
+                        // Save to cache
+                        var searchResultsJson = JsonSerializer.Serialize(model);
+                        if (cachedEntry == null)
+                        {
+                            _context.SearchCacheEntries.Add(new SearchCacheEntry
+                            {
+                                SearchQuery = fullQuery,
+                                Timestamp = DateTime.Now,
+                                SearchResultsJson = searchResultsJson
+                            });
+                        }
+                        else
+                        {
+                            cachedEntry.Timestamp = DateTime.Now;
+                            cachedEntry.SearchResultsJson = searchResultsJson;
+                            _context.SearchCacheEntries.Update(cachedEntry);
+                        }
+                        await _context.SaveChangesAsync();
+                    }
                 }
             }
 
@@ -111,3 +181,4 @@ namespace BilbiotecaDinamica.Controllers
         }
     }
 }
+
