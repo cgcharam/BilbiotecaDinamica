@@ -89,6 +89,69 @@ La aplicación normalmente se ejecutará en `https://localhost:7000` (o un puert
     -   `appsettings.json`: Configuración de la aplicación.
     -   `Program.cs`: Configuración de inicio de la aplicación.
 
+## BilbiotecaDinamica — Cambios recientes
+
+Resumen breve
+
+- Se ha habilitado tolerancia a fallos transitorios en la conexión a la base de datos añadiendo `EnableRetryOnFailure()` al registro del `DbContext`.
+- Se añadió ejecución automática de migraciones al arranque de la aplicación (`context.Database.Migrate()`) para crear la base de datos y aplicar migraciones pendientes en entornos de desarrollo.
+- Se añadió la directiva necesaria `using Microsoft.Extensions.DependencyInjection;` en `Program.cs`.
+
+Motivación
+
+Al crear usuarios con ASP.NET Core Identity la aplicación fallaba con:
+
+```
+Cannot open database "BilbiotecaDinamica" requested by the login. The login failed.
+```
+
+Causa raíz
+
+- La base de datos `BilbiotecaDinamica` no existía o no tenía las tablas de Identity aplicadas. El intento de crear un usuario falla al usar EF Core porque no puede abrir la base de datos.
+- En algunos escenarios la conexión puede sufrir errores transitorios; `EnableRetryOnFailure()` mitiga esos casos.
+
+Cambios aplicados (ubicación)
+
+- `Program.cs`:
+  - `builder.Services.AddDbContext<ApplicationDbContext>(options => options.UseSqlServer(connectionString, sqlOptions => sqlOptions.EnableRetryOnFailure()));`
+  - Bloque de arranque que crea un scope y ejecuta `context.Database.Migrate()`.
+  - `using Microsoft.Extensions.DependencyInjection;`
+
+Advertencias y buenas prácticas
+
+- No es recomendable ejecutar `Database.Migrate()` automáticamente en entornos de producción sin control: prefiera aplicar migraciones mediante su pipeline CI/CD o un paso manual controlado.
+- Si prefiere no aplicar migraciones en runtime, elimine o comente el bloque que llama a `context.Database.Migrate()` y use:
+
+```bash
+# Crear migración (si no existe aún)
+dotnet ef migrations add InitialIdentitySetup
+
+# Aplicar migraciones a la BD
+dotnet ef database update
+```
+
+- Asegúrese de que la cadena de conexión en `appsettings.json` sea la adecuada y que el usuario/servicio que ejecuta la aplicación tenga permisos sobre la base de datos. Para LocalDB con autenticación integrada la cadena por defecto es:
+
+```json
+"ConnectionStrings": {
+  "ApplicationDbContextConnection": "Server=(localdb)\\\\mssqllocaldb;Database=BilbiotecaDinamica;Trusted_Connection=True;MultipleActiveResultSets=true"
+}
+```
+
+Qué hacer si el error persiste
+
+1. Verifique que el servidor SQL (LocalDB) esté en ejecución.
+2. En SQL Server Management Studio (o `sqllocaldb`), confirme que la base de datos `BilbiotecaDinamica` exista.
+3. Ejecute `dotnet ef database update` manualmente para crear la BD y tablas.
+4. Revise los permisos del usuario que ejecuta la app.
+
+Contacto
+
+Este README documenta las correcciones aplicadas en el repositorio. Si desea, puedo:
+
+- Revertir la llamada automática a `Database.Migrate()` y documentar un flujo seguro para producción.
+- Añadir scripts de migración inicial y ejemplos de CI/CD para desplegar migraciones.
+
 ## Contribución
 
 (Opcional: Añade guías para contribuciones si este es un proyecto de código abierto.)
