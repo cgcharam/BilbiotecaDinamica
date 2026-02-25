@@ -83,11 +83,13 @@
                     <td>@doc.FirstPublishYear</td>
                     @if (SignInManager.IsSignedIn(User))
                     {
-                        <td>
+                            <td>
                             <form asp-controller="MyBooks" asp-action="Add" method="post">
                                 <input type="hidden" name="openLibraryId" value="@(doc.AdditionalFields != null && doc.AdditionalFields.TryGetValue("key", out var olKey) ? olKey.ToString() : "")" />
+                                <input type="hidden" name="isManual" value="false" />
                                 <input type="hidden" name="title" value="@doc.Title" />
                                 <input type="hidden" name="author" value="@(doc.AuthorName != null ? string.Join(", ", doc.AuthorName) : "")" />
+                                <input type="hidden" name="author_key" value="@(doc.author_key != null ? string.Join(", ", doc.author_key) : "")" />
                                 <input type="hidden" name="coverId" value="@(doc.AdditionalFields != null && doc.AdditionalFields.TryGetValue("cover_i", out var cId) ? cId.ToString() : "")" />
                                 <input type="hidden" name="firstPublishYear" value="@doc.FirstPublishYear" />
                                 <input type="hidden" name="coverImageUrl" value="@doc.CoverImageUrl" />

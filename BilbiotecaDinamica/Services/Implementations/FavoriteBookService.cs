@@ -27,6 +27,13 @@ namespace BilbiotecaDinamica.Services.Implementations
 
         public async Task AddFavoriteAsync(FavoriteBook book)
         {
+            // Limitar a máximo 10 favoritos por usuario
+            var favCount = await _context.FavoriteBooks.CountAsync(b => b.UserId == book.UserId);
+            if (favCount >= 10)
+            {
+                throw new InvalidOperationException("El número máximo de libros favoritos (10) ha sido alcanzado.");
+            }
+
             var exists = await _context.FavoriteBooks.AnyAsync(b => b.UserId == book.UserId && b.OpenLibraryId == book.OpenLibraryId);
             if (!exists)
             {

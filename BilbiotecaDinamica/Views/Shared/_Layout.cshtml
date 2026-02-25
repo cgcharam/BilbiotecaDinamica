@@ -31,7 +31,10 @@
                         @if (SignInManager.IsSignedIn(User))
                         {
                             <li class="nav-item">
-                                <a class="nav-link text-dark" asp-area="" asp-controller="MyBooks" asp-action="Index">My Books</a>
+                                <a class="nav-link text-dark" asp-area="" asp-controller="MyBooks" asp-action="Index">[Mis libros]</a>
+                            </li>
+                            <li class="nav-item">
+                                <a class="nav-link text-dark" asp-area="" asp-controller="Authors" asp-action="Index">[Mis Autores]</a>
                             </li>
                         }
                     </ul>

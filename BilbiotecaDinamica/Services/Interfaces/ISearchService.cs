@@ -8,5 +8,7 @@ namespace BilbiotecaDinamica.Services.Interfaces
     {
         Task<List<Doc>> SearchAsync(string query, string searchType);
         Task<List<Doc>> AdvancedSearchAsync(AdvancedSearchViewModel model);
+        Task<Models.Author?> SearchAuthorAsync(string name);
+        Task<Models.Author?> SearchAuthorByKeyAsync(string key);
     }
 }

@@ -18,6 +18,9 @@ namespace BilbiotecaDinamica.Models
         [JsonPropertyName("author_name")]
         public List<string>? AuthorName { get; set; }
 
+        [JsonPropertyName("author_key")]
+        public List<string>? author_key { get; set; }
+
         [JsonPropertyName("first_publish_year")]
         public int FirstPublishYear { get; set; }
 

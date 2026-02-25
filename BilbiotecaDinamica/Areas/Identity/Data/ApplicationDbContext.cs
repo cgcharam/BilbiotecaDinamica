@@ -14,6 +14,7 @@ public class ApplicationDbContext : IdentityDbContext<IdentityUser>
 
     public DbSet<FavoriteBook> FavoriteBooks { get; set; }
     public DbSet<SearchCacheEntry> SearchCacheEntries { get; set; }
+    public DbSet<Author> Authors { get; set; }
 
     protected override void OnModelCreating(ModelBuilder builder)
     {

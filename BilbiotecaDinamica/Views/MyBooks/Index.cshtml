@@ -1,10 +1,57 @@
-@model IEnumerable<BilbiotecaDinamica.Models.FavoriteBook>
+@model BilbiotecaDinamica.Models.MyBooksViewModel
 
 @{
-    ViewData["Title"] = "Mis Libros";
+    ViewData["Title"] = "[Mis libros]";
 }
 
-<h1>Mis Libros</h1>
+<h1>[Mis libros]</h1>
+
+@if (TempData["Error"] != null)
+{
+    <div class="alert alert-danger">@TempData["Error"]</div>
+}
+@if (TempData["Success"] != null)
+{
+    <div class="alert alert-success">@TempData["Success"]</div>
+}
+
+<h2>Agregar libro manualmente</h2>
+<form asp-action="Add" method="post">
+    <input type="hidden" name="isManual" value="true" />
+    <div class="row">
+        <div class="col-md-4">
+            <div class="mb-3">
+                <label for="openLibraryId">OpenLibrary ID</label>
+                <input class="form-control" name="openLibraryId" id="openLibraryId" />
+            </div>
+            <div class="mb-3">
+                <label for="title">Título</label>
+                <input class="form-control" name="title" id="title" />
+            </div>
+            <div class="mb-3">
+                <label for="author">Autor</label>
+                <select class="form-select" name="author" id="author">
+                    <option value="">-- Selecciona un autor --</option>
+                    @foreach (var a in Model.Authors)
+                    {
+                        <option value="@a.FullName">@a.FullName</option>
+                    }
+                </select>
+            </div>
+            <div class="mb-3">
+                <label for="firstPublishYear">Año de publicación</label>
+                <input class="form-control" name="firstPublishYear" id="firstPublishYear" type="number" />
+            </div>
+            <div class="mb-3">
+                <label for="coverImageUrl">URL Portada (opcional)</label>
+                <input class="form-control" name="coverImageUrl" id="coverImageUrl" />
+            </div>
+            <button type="submit" class="btn btn-primary">Agregar</button>
+        </div>
+    </div>
+</form>
+
+<h2 class="mt-4">Lista de libros favoritos</h2>
 
 <table class="table">
     <thead>
@@ -17,7 +64,7 @@
         </tr>
     </thead>
     <tbody>
-        @foreach (var item in Model)
+        @foreach (var item in Model.FavoriteBooks)
         {
             <tr>
                 <td>

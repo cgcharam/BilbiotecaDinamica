@@ -1,0 +1,38 @@
+@model IEnumerable<BilbiotecaDinamica.Models.Author>
+
+@{
+    ViewData["Title"] = "[Mis Autores]";
+}
+
+<h1>[Mis Autores]</h1>
+
+<p>
+    <a asp-action="Create" class="btn btn-primary">Agregar autor</a>
+</p>
+
+<table class="table">
+    <thead>
+        <tr>
+            <th>Nombre completo</th>
+            <th>Fecha de nacimiento</th>
+            <th>Ciudad</th>
+            <th>Correo electrónico</th>
+            <th>Acciones</th>
+        </tr>
+    </thead>
+    <tbody>
+        @foreach (var item in Model)
+        {
+            <tr>
+                <td>@item.FullName</td>
+                <td>@(item.DateOfBirth?.ToString("yyyy-MM-dd"))</td>
+                <td>@item.City</td>
+                <td>@item.Email</td>
+                <td>
+                    <a asp-action="Edit" asp-route-id="@item.Id" class="btn btn-sm btn-primary">Editar</a>
+                    <a asp-action="Delete" asp-route-id="@item.Id" class="btn btn-sm btn-danger">Eliminar</a>
+                </td>
+            </tr>
+        }
+    </tbody>
+</table>

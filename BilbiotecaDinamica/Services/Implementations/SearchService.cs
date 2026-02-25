@@ -25,6 +25,113 @@ namespace BilbiotecaDinamica.Services.Implementations
             _logger = logger;
         }
 
+        public async Task<Author?> SearchAuthorByKeyAsync(string key)
+        {
+            if (string.IsNullOrWhiteSpace(key)) return null;
+
+            // Normalize key to start with /authors/
+            var normalized = key.StartsWith("/authors/") ? key : (key.StartsWith("OL") ? $"/authors/{key}" : key);
+
+            try
+            {
+                var client = _httpClientFactory.CreateClient();
+                var detailsResp = await client.GetAsync($"https://openlibrary.org{normalized}.json");
+                if (!detailsResp.IsSuccessStatusCode)
+                {
+                    return null;
+                }
+
+                var detailsJson = await detailsResp.Content.ReadAsStringAsync();
+                using var detailsDoc = JsonDocument.Parse(detailsJson);
+                var root = detailsDoc.RootElement;
+
+                var authorName = root.TryGetProperty("name", out var n) ? n.GetString() : null;
+                var birthDateStr = root.TryGetProperty("birth_date", out var bd) ? bd.GetString() : null;
+                var birthPlace = root.TryGetProperty("birth_place", out var bp) ? bp.GetString() : null;
+                if (string.IsNullOrEmpty(birthPlace))
+                {
+                    if (root.TryGetProperty("birthplace", out var bpx)) birthPlace = bpx.GetString();
+                    else if (root.TryGetProperty("location", out var loc)) birthPlace = loc.GetString();
+                }
+
+                DateTime? dob = null;
+                if (!string.IsNullOrEmpty(birthDateStr) && DateTime.TryParse(birthDateStr, out var parsed)) dob = parsed;
+
+                return new Author
+                {
+                    FullName = authorName ?? key,
+                    DateOfBirth = dob,
+                    City = birthPlace
+                };
+            }
+            catch (Exception ex)
+            {
+                _logger.LogWarning(ex, "Failed to fetch author details by key {Key}", key);
+                return new Author { FullName = key };
+            }
+        }
+
+        public async Task<Author?> SearchAuthorAsync(string name)
+        {
+            if (string.IsNullOrWhiteSpace(name)) return null;
+
+            try
+            {
+                var client = _httpClientFactory.CreateClient();
+                // Search authors
+                var response = await client.GetAsync($"https://openlibrary.org/search/authors.json?q={Uri.EscapeDataString(name)}");
+                if (!response.IsSuccessStatusCode) return new Author { FullName = name };
+
+                var json = await response.Content.ReadAsStringAsync();
+                using var doc = JsonDocument.Parse(json);
+                if (!doc.RootElement.TryGetProperty("docs", out var docs) || docs.GetArrayLength() == 0)
+                {
+                    return new Author { FullName = name };
+                }
+
+                var first = docs[0];
+                var authorName = first.TryGetProperty("name", out var n) ? n.GetString() ?? name : name;
+                var key = first.TryGetProperty("key", out var k) ? k.GetString() : null; // e.g. "/authors/OL123A"
+
+                // If we have a key, fetch detailed record
+                string birthDateStr = null;
+                string birthPlace = null;
+                if (!string.IsNullOrEmpty(key))
+                {
+                    var detailsResp = await client.GetAsync($"https://openlibrary.org/authors/{key}.json");
+                    if (detailsResp.IsSuccessStatusCode)
+                    {
+                        var detailsJson = await detailsResp.Content.ReadAsStringAsync();
+                        using var detailsDoc = JsonDocument.Parse(detailsJson);
+                        var root = detailsDoc.RootElement;
+                        if (root.TryGetProperty("birth_date", out var bd)) birthDateStr = bd.GetString();
+                        if (root.TryGetProperty("birth_place", out var bp)) birthPlace = bp.GetString();
+                        // sometimes 'location' or 'birthplace' fields may vary; try other names
+                        if (string.IsNullOrEmpty(birthPlace))
+                        {
+                            if (root.TryGetProperty("birthplace", out var bpx)) birthPlace = bpx.GetString();
+                            else if (root.TryGetProperty("location", out var loc)) birthPlace = loc.GetString();
+                        }
+                    }
+                }
+
+                DateTime? dob = null;
+                if (!string.IsNullOrEmpty(birthDateStr) && DateTime.TryParse(birthDateStr, out var parsed)) dob = parsed;
+
+                return new Author
+                {
+                    FullName = authorName,
+                    DateOfBirth = dob,
+                    City = birthPlace
+                };
+            }
+            catch (Exception ex)
+            {
+                _logger.LogWarning(ex, "Failed to fetch author details for {Name}", name);
+                return new Author { FullName = name };
+            }
+        }
+
         public async Task<List<Doc>> SearchAsync(string query, string searchType)
         {
             if (string.IsNullOrEmpty(query)) return new List<Doc>();

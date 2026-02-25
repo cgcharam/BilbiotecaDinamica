@@ -6,13 +6,14 @@ using Microsoft.AspNetCore.Localization;
 using Microsoft.Extensions.DependencyInjection;
 using BilbiotecaDinamica.Services.Interfaces;
 using BilbiotecaDinamica.Services.Implementations;
+using System;
 
 var builder = WebApplication.CreateBuilder(args);
 var connectionString = builder.Configuration.GetConnectionString("ApplicationDbContextConnection") ?? throw new InvalidOperationException("Connection string 'ApplicationDbContextConnection' not found.");
 
-// Configura el DbContext con reintentos para fallos transitorios
+// Use SQL Server (LocalDB) as requested
 builder.Services.AddDbContext<ApplicationDbContext>(options =>
-    options.UseSqlServer(connectionString, sqlOptions => sqlOptions.EnableRetryOnFailure())
+    options.UseSqlServer(connectionString)
 );
 
 builder.Services.AddDefaultIdentity<IdentityUser>(options => options.SignIn.RequireConfirmedAccount = true).AddEntityFrameworkStores<ApplicationDbContext>();
@@ -44,7 +45,7 @@ using (var scope = app.Services.CreateScope())
     {
         var context = services.GetRequiredService<ApplicationDbContext>();
         context.Database.Migrate();
-        app.Logger.LogInformation("Database migrated successfully.");
+        //app.Logger.LogInformation("Database migrated successfully.");
     }
     catch (Exception ex)
     {

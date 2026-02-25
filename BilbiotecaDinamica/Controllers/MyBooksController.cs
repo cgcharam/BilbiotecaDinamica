@@ -15,11 +15,15 @@ namespace BilbiotecaDinamica.Controllers
     {
         private readonly IFavoriteBookService _favoriteBookService;
         private readonly UserManager<IdentityUser> _userManager;
+        private readonly ApplicationDbContext _db;
+        private readonly BilbiotecaDinamica.Services.Interfaces.ISearchService _searchService;
 
-        public MyBooksController(IFavoriteBookService favoriteBookService, UserManager<IdentityUser> userManager)
+        public MyBooksController(IFavoriteBookService favoriteBookService, UserManager<IdentityUser> userManager, ApplicationDbContext db, BilbiotecaDinamica.Services.Interfaces.ISearchService searchService)
         {
             _favoriteBookService = favoriteBookService;
             _userManager = userManager;
+            _db = db;
+            _searchService = searchService;
         }
 
         // GET: MyBooks
@@ -27,13 +31,22 @@ namespace BilbiotecaDinamica.Controllers
         {
             var userId = _userManager.GetUserId(User);
             var myBooks = await _favoriteBookService.GetByUserAsync(userId);
-            return View(myBooks);
+            // Obtener lista de autores del usuario para el formulario de añadido manual
+            var authors = await _db.Authors.AsNoTracking().Where(a => a.UserId == userId).ToListAsync();
+
+            var vm = new Models.MyBooksViewModel
+            {
+                FavoriteBooks = myBooks,
+                Authors = authors
+            };
+
+            return View(vm);
         }
 
         // POST: MyBooks/Add
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> Add(string openLibraryId, string title, string author, int? coverId, int? firstPublishYear, string? coverImageUrl)
+        public async Task<IActionResult> Add(string openLibraryId, string title, string author, string? author_key, int? coverId, int? firstPublishYear, string? coverImageUrl, bool isManual = false)
         {
             if (openLibraryId == null || title == null || author == null)
             {
@@ -53,9 +66,71 @@ namespace BilbiotecaDinamica.Controllers
                 CoverImageUrl = coverImageUrl
             };
 
-            await _favoriteBookService.AddFavoriteAsync(book);
+            // Si es adición manual desde la sección [Mis libros], exigir que el autor exista
+            if (isManual)
+            {
+                var existsAuthor = await _db.Authors.AnyAsync(a => a.FullName == author);
+                if (!existsAuthor)
+                {
+                    TempData["Error"] = "El autor especificado no existe. Agrega el autor en 'Mis Autores' antes de añadir el libro.";
+                    return RedirectToAction("Index");
+                }
+            }
+            else
+            {
+                // Si viene desde Home (no manual), separar autores por comas y crear cada registro si no existe para el usuario
+                var authorNames = author.Split(',').Select(a => a.Trim()).Where(a => !string.IsNullOrEmpty(a)).ToList();
+                var authorKeys = (author_key ?? string.Empty).Split(',').Select(k => k.Trim()).Where(k => !string.IsNullOrEmpty(k)).ToList();
 
-            return RedirectToAction("Index", "Home"); // Redirect back to the search results
+                for (int i = 0; i < authorNames.Count; i++)
+                {
+                    var name = authorNames[i];
+                    var key = i < authorKeys.Count ? authorKeys[i] : null;
+
+                    var existsAuthor = await _db.Authors.FirstOrDefaultAsync(a => a.FullName == name && a.UserId == userId);
+                    if (existsAuthor == null)
+                    {
+                        Author? fetched = null;
+
+                        // Primero intentar por clave de OpenLibrary si se proporcionó
+                        if (!string.IsNullOrEmpty(key))
+                        {
+                            fetched = await _searchService.SearchAuthorByKeyAsync(key);
+                        }
+
+                        // Si no se obtuvo por key, intentar búsqueda por nombre
+                        if (fetched == null)
+                        {
+                            fetched = await _searchService.SearchAuthorAsync(name);
+                        }
+
+                        if (fetched != null)
+                        {
+                            fetched.UserId = userId;
+                            if (string.IsNullOrEmpty(fetched.FullName)) fetched.FullName = name;
+                            _db.Authors.Add(fetched);
+                        }
+                        else
+                        {
+                            _db.Authors.Add(new Author { FullName = name, UserId = userId });
+                        }
+                    }
+                }
+
+                await _db.SaveChangesAsync();
+            }
+
+            try
+            {
+                await _favoriteBookService.AddFavoriteAsync(book);
+                TempData["Success"] = "Libro añadido correctamente.";
+            }
+            catch (InvalidOperationException ex)
+            {
+                TempData["Error"] = ex.Message;
+            }
+
+            return RedirectToAction("Index");
         }
 
         // GET: MyBooks/Delete/5
