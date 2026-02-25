@@ -6,18 +6,19 @@ using BilbiotecaDinamica.Data;
 using BilbiotecaDinamica.Models;
 using System.Linq;
 using System.Threading.Tasks;
+using BilbiotecaDinamica.Services.Interfaces;
 
 namespace BilbiotecaDinamica.Controllers
 {
     [Authorize]
     public class MyBooksController : Controller
     {
-        private readonly ApplicationDbContext _context;
+        private readonly IFavoriteBookService _favoriteBookService;
         private readonly UserManager<IdentityUser> _userManager;
 
-        public MyBooksController(ApplicationDbContext context, UserManager<IdentityUser> userManager)
+        public MyBooksController(IFavoriteBookService favoriteBookService, UserManager<IdentityUser> userManager)
         {
-            _context = context;
+            _favoriteBookService = favoriteBookService;
             _userManager = userManager;
         }
 
@@ -25,9 +26,7 @@ namespace BilbiotecaDinamica.Controllers
         public async Task<IActionResult> Index()
         {
             var userId = _userManager.GetUserId(User);
-            var myBooks = await _context.FavoriteBooks
-                                        .Where(b => b.UserId == userId)
-                                        .ToListAsync();
+            var myBooks = await _favoriteBookService.GetByUserAsync(userId);
             return View(myBooks);
         }
 
@@ -43,26 +42,18 @@ namespace BilbiotecaDinamica.Controllers
 
             var userId = _userManager.GetUserId(User);
 
-            // Check if the book already exists for the user
-            var existingBook = await _context.FavoriteBooks
-                                            .FirstOrDefaultAsync(b => b.UserId == userId && b.OpenLibraryId == openLibraryId);
-
-            if (existingBook == null)
+            var book = new FavoriteBook
             {
-                var book = new FavoriteBook
-                {
-                    UserId = userId,
-                    OpenLibraryId = openLibraryId,
-                    Title = title,
-                    Author = author,
-                    CoverId = coverId,
-                    FirstPublishYear = (int?)firstPublishYear,
-                    CoverImageUrl = coverImageUrl
-                };
+                UserId = userId,
+                OpenLibraryId = openLibraryId,
+                Title = title,
+                Author = author,
+                CoverId = coverId,
+                FirstPublishYear = (int?)firstPublishYear,
+                CoverImageUrl = coverImageUrl
+            };
 
-                _context.Add(book);
-                await _context.SaveChangesAsync();
-            }
+            await _favoriteBookService.AddFavoriteAsync(book);
 
             return RedirectToAction("Index", "Home"); // Redirect back to the search results
         }
@@ -76,8 +67,7 @@ namespace BilbiotecaDinamica.Controllers
             }
 
             var userId = _userManager.GetUserId(User);
-            var favoriteBook = await _context.FavoriteBooks
-                .FirstOrDefaultAsync(m => m.Id == id && m.UserId == userId);
+            var favoriteBook = await _favoriteBookService.GetByIdAsync(id.Value, userId);
             if (favoriteBook == null)
             {
                 return NotFound();
@@ -92,11 +82,10 @@ namespace BilbiotecaDinamica.Controllers
         public async Task<IActionResult> DeleteConfirmed(int id)
         {
             var userId = _userManager.GetUserId(User);
-            var favoriteBook = await _context.FavoriteBooks.FirstOrDefaultAsync(m => m.Id == id && m.UserId == userId);
+            var favoriteBook = await _favoriteBookService.GetByIdAsync(id, userId);
             if (favoriteBook != null)
             {
-                _context.FavoriteBooks.Remove(favoriteBook);
-                await _context.SaveChangesAsync();
+                await _favoriteBookService.DeleteAsync(favoriteBook);
             }
             return RedirectToAction(nameof(Index));
         }
