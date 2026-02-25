@@ -46,7 +46,7 @@ namespace BilbiotecaDinamica.Controllers
         // POST: MyBooks/Add
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> Add(string openLibraryId, string title, string author, string? author_key, int? coverId, int? firstPublishYear, string? coverImageUrl, bool isManual = false)
+        public async Task<IActionResult> Add(string openLibraryId, string title, string author, string? author_key, int? coverId, int? firstPublishYear, string? coverImageUrl, bool isManual = false, string? returnUrl = null)
         {
             if (openLibraryId == null || title == null || author == null)
             {
@@ -120,14 +120,38 @@ namespace BilbiotecaDinamica.Controllers
                 await _db.SaveChangesAsync();
             }
 
+            bool success = false;
+            string message = string.Empty;
             try
             {
                 await _favoriteBookService.AddFavoriteAsync(book);
-                TempData["Success"] = "Libro añadido correctamente.";
+                success = true;
+                message = "Libro añadido correctamente.";
+                TempData["Success"] = message;
             }
             catch (InvalidOperationException ex)
             {
-                TempData["Error"] = ex.Message;
+                success = false;
+                message = ex.Message;
+                TempData["Error"] = message;
+            }
+
+            // If the request is AJAX, return JSON and do not redirect (client will handle UI)
+            var isAjax = string.Equals(Request.Headers["X-Requested-With"], "XMLHttpRequest")
+                         || Request.Headers["Accept"].ToString().Contains("application/json");
+            if (isAjax)
+            {
+                return Json(new { success, message });
+            }
+
+            // If request originated from Home (non-AJAX), redirect back to returnUrl or Home
+            if (!isManual)
+            {
+                if (!string.IsNullOrEmpty(returnUrl) && Url.IsLocalUrl(returnUrl))
+                {
+                    return LocalRedirect(returnUrl);
+                }
+                return RedirectToAction("Index", "Home");
             }
 
             return RedirectToAction("Index");

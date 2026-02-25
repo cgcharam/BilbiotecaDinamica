@@ -6,14 +6,7 @@
 
 <h1>[Mis libros]</h1>
 
-@if (TempData["Error"] != null)
-{
-    <div class="alert alert-danger">@TempData["Error"]</div>
-}
-@if (TempData["Success"] != null)
-{
-    <div class="alert alert-success">@TempData["Success"]</div>
-}
+@* Notifications are shown as Bootstrap toasts in the layout *@
 
 <h2>Agregar libro manualmente</h2>
 <form asp-action="Add" method="post">

@@ -41,12 +41,33 @@
                     <partial name="_LoginPartial" />
                 </div>
             </div>
+    
+    @* Blocking modal used for AJAX add confirmation *@
+    <div class="modal fade" id="blockingModal" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">Notificación</h5>
+                </div>
+                <div class="modal-body" id="blockingModalBody"></div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-primary" id="blockingModalAccept">Aceptar</button>
+                </div>
+            </div>
+        </div>
+    </div>
         </nav>
     </header>
     <div class="container">
         <main role="main" class="pb-3">
             @RenderBody()
         </main>
+    </div>
+
+    @* Toast container (toasts created dynamically for consistent appearance/behavior) *@
+    @{ var successMessage = TempData["Success"] as string; var errorMessage = TempData["Error"] as string; }
+    <div aria-live="polite" aria-atomic="true" class="position-relative">
+        <div class="toast-container position-fixed top-0 end-0 p-3" id="toastContainer"></div>
     </div>
 
     <footer class="border-top footer text-muted">
@@ -57,6 +78,68 @@
     <script src="~/lib/jquery/dist/jquery.min.js"></script>
     <script src="~/lib/bootstrap/dist/js/bootstrap.bundle.min.js"></script>
     <script src="~/js/site.js" asp-append-version="true"></script>
+    <script>
+        // Create and show a bootstrap toast with consistent appearance
+        function showToast(type, message, delay) {
+            delay = delay || 5000;
+            var container = document.getElementById('toastContainer');
+            if (!container) return;
+
+            var toast = document.createElement('div');
+            toast.className = 'toast align-items-center border-0';
+            toast.setAttribute('role', 'alert');
+            toast.setAttribute('aria-live', 'assertive');
+            toast.setAttribute('aria-atomic', 'true');
+
+            var colorClass = type === 'error' ? 'bg-danger text-white' : 'bg-success text-white';
+
+            toast.innerHTML = '\n+                <div class="d-flex ' + colorClass + '">\n+                    <div class="toast-body" style="min-width:200px;">' + (message || '') + '</div>\n+                    <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast" aria-label="Close"></button>\n+                </div>';
+
+            container.appendChild(toast);
+
+            var bsToast = new bootstrap.Toast(toast, { delay: delay });
+            bsToast.show();
+
+            // Remove from DOM after hidden
+            toast.addEventListener('hidden.bs.toast', function () {
+                try { container.removeChild(toast); } catch (e) { }
+            });
+        }
+
+        // Immediately show any server TempData messages using the same toast appearance
+        (function () {
+            try {
+                var success = @Html.Raw(System.Text.Json.JsonSerializer.Serialize(successMessage));
+                var error = @Html.Raw(System.Text.Json.JsonSerializer.Serialize(errorMessage));
+                if (success) showToast('success', success, 5000);
+                if (error) showToast('error', error, 7000);
+            } catch (e) {
+                console && console.warn && console.warn('Toast show failed', e);
+            }
+        })();
+    </script>
+    <script>
+        // Blocking modal helper
+        (function () {
+            var modalEl = document.getElementById('blockingModal');
+            var modalInstance = null;
+            try {
+                if (modalEl) modalInstance = new bootstrap.Modal(modalEl, { backdrop: 'static', keyboard: false });
+            } catch (e) { /* ignore */ }
+
+            window.showBlockingModal = function (message) {
+                if (!modalEl) return;
+                var body = document.getElementById('blockingModalBody');
+                if (body) body.textContent = message;
+                if (modalInstance) modalInstance.show();
+            };
+
+            var acceptBtn = document.getElementById('blockingModalAccept');
+            if (acceptBtn) acceptBtn.addEventListener('click', function () {
+                try { modalInstance && modalInstance.hide(); } catch (e) { }
+            });
+        })();
+    </script>
     @await RenderSectionAsync("Scripts", required: false)
 </body>
 </html>

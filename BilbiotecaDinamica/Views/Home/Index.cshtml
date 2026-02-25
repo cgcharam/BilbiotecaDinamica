@@ -84,7 +84,9 @@
                     @if (SignInManager.IsSignedIn(User))
                     {
                             <td>
-                            <form asp-controller="MyBooks" asp-action="Add" method="post">
+                            <form class="ajax-add-favorite" asp-controller="MyBooks" asp-action="Add" method="post">
+                                @Html.AntiForgeryToken()
+                                <input type="hidden" name="returnUrl" value="@Context.Request.Path@Context.Request.QueryString" />
                                 <input type="hidden" name="openLibraryId" value="@(doc.AdditionalFields != null && doc.AdditionalFields.TryGetValue("key", out var olKey) ? olKey.ToString() : "")" />
                                 <input type="hidden" name="isManual" value="false" />
                                 <input type="hidden" name="title" value="@doc.Title" />
@@ -115,4 +117,33 @@ else
 {
     <p>No se encontraron resultados.</p>
 }
+
+<script>
+    // Intercept AJAX add-to-favorites forms to avoid full page reload and show blocking modal
+    document.addEventListener('submit', function (e) {
+        var form = e.target;
+        if (form && form.classList && form.classList.contains('ajax-add-favorite')) {
+            e.preventDefault();
+            var data = new URLSearchParams(new FormData(form));
+            fetch(form.action, {
+                method: 'POST',
+                headers: {
+                    'X-Requested-With': 'XMLHttpRequest',
+                    'Accept': 'application/json'
+                },
+                body: data
+            }).then(function (resp) {
+                if (resp.ok) {
+                    return resp.json();
+                }
+                return resp.text().then(function () { return { success: false, message: 'Error al añadir el libro.' }; });
+            }).then(function (json) {
+                var msg = (json && json.message) ? json.message : (json && json.success ? 'Libro añadido correctamente.' : 'Ocurrió un error.');
+                if (window.showBlockingModal) window.showBlockingModal(msg);
+            }).catch(function () {
+                if (window.showBlockingModal) window.showBlockingModal('Error de red al añadir el libro.');
+            });
+        }
+    });
+</script>
 
