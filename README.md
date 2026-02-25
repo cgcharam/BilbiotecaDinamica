@@ -1,7 +1,7 @@
 # BilbiotecaDinamica
 
 Este proyecto es una aplicación ASP.NET Core MVC diseñada para gestionar una biblioteca dinámica que permite buscar libros por titulo o autor basandose en https://openlibrary.org/. 
-Incluye autenticación y autorización de usuarios utilizando ASP.NET Core Identity, y funcionalidades para buscar y gestionar libros.
+Incluye autenticación y autorización de usuarios utilizando ASP.NET Core Identity.
 
 ## Características
 
